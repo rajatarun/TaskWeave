@@ -1,0 +1,23 @@
+[
+  {
+    "name": "ProblemTranslator",
+    "description": "Translates user queries into structured business problems",
+    "type": "llm_prompt",
+    "prompt_template": "Translate this question into a business problem: {input}"
+  },
+  {
+    "name": "DataFetcher",
+    "description": "Fetches data from sales APIs based on the problem",
+    "type": "api_call",
+    "method": "POST",
+    "endpoint": "https://mock-api.com/sales-data",
+    "params_from_input": ["ProblemTranslator"],
+    "input": ["ProblemTranslator"]
+  },
+  {
+    "name": "Analyzer",
+    "description": "Analyzes the fetched data and identifies patterns",
+    "type": "analysis",
+    "input": ["DataFetcher"]
+  }
+]
