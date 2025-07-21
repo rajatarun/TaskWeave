@@ -1,8 +1,14 @@
-import requests
+# llm_client.py
+import os
+import openai
 
-LLM_API_URL = "https://your-llm-api.com/v1/predict"  # Replace with your endpoint
+openai.api_key = os.getenv("OPENAI_KEY")
 
-def call_llm(prompt: str) -> str:
-    response = requests.post(LLM_API_URL, json={"prompt": prompt})
-    response.raise_for_status()
-    return response.json().get("result", "LLM did not return output")
+def call_llm(prompt: str, model="gpt-4", temperature=0.7, max_tokens=1000):
+    response = openai.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=temperature,
+        max_tokens=max_tokens
+    )
+    return response.choices[0].message.content
