@@ -18,6 +18,7 @@
     "name": "Analyzer",
     "description": "Analyzes the fetched data and identifies patterns",
     "type": "analysis",
+    "prompt_template":"Based on all the information analythe the patterns : {input}",
     "input": ["DataFetcher"]
   }
 ]

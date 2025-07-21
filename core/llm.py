@@ -4,7 +4,7 @@ import openai
 
 openai.api_key = os.getenv("OPENAI_KEY")
 
-def call_llm(prompt: str, model="gpt-4", temperature=0.7, max_tokens=1000):
+def call_llm(prompt: str, model="gpt-4o-mini", temperature=0.7, max_tokens=1000):
     response = openai.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": prompt}],

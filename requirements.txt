@@ -1,5 +1,6 @@
 boto3
 openai
 langchain
+langchain_core
 langgraph
 pydantic

@@ -4,7 +4,7 @@ from langchain.agents import initialize_agent, AgentType
 from core.llm import call_llm
 from langchain_core.runnables import Runnable
 from typing import Any
-from langchain_core.prompts_values import StringPromptValue
+from langchain_core.prompt_values import StringPromptValue
 
 shared_memory = {}
 

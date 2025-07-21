@@ -27,6 +27,8 @@ def build_tool(tool_def, shared_memory):
             output = {"output": res.json()}
 
         elif tool_type == "analysis":
+            prompt = tool_def["prompt_template"].format(input=inputs.get("question", ""))
+            response = call_llm(prompt)
             output = {"output": f"Correlation analysis done using inputs: {inputs}"}
 
         else:
