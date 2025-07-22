@@ -1,7 +1,3 @@
-Here’s a README.md for your project TaskWeave, structured for clarity and collaboration:
-
-⸻
-
 🧠 TaskWeave
 
 TaskWeave is a dynamic, JSON-driven agent framework built on LangChain and LangGraph. It allows you to spin up intelligent, configurable LLM-powered pipelines where each “tool” or “agent” performs a specific task, such as making API calls, analyzing data, or invoking LLM prompts.
