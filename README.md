@@ -1,64 +1,41 @@
 🧠 TaskWeave
 
-TaskWeave is a dynamic, JSON-driven agent framework built on LangChain and LangGraph. It allows you to spin up intelligent, configurable LLM-powered pipelines where each “tool” or “agent” performs a specific task, such as making API calls, analyzing data, or invoking LLM prompts.
+TaskWeave is a dynamic, JSON-driven agent framework built with LangChain and LangGraph. It creates an execution pipeline from configuration so questions can be parsed and processed by dynamically created agents.
 
-Designed for rapid prototyping and robust orchestration in data and software workflows.
+## What this app does
 
-⸻
+1. Loads `config/tool_config.json`.
+2. Reads `agent.framework` to decide runtime:
+   - `langchain`: ReAct-style tool-using agent.
+   - `langgraph`: Deterministic chained workflow built from tool dependencies.
+3. Builds tools from JSON (`llm_prompt`, `api_call`, `analysis`).
+4. Executes tasks with dependency-aware chaining and shared memory.
 
-⚙️ Features
-	•	🔄 JSON-defined task flows
-	•	🧩 Modular tasks (llm_prompt, api_call, analysis, etc.)
-	•	☁️ Config and tool definitions fetched from S3
-	•	🔗 Output chaining between tools
-	•	🧠 OpenAI LLMs via openai Python SDK
-	•	👥 Specialized agents for dev, QA, and analytics roles
+## JSON-driven agent behavior
 
+- Agent type is controlled by JSON (`agent.framework` + `agent.agent_type`).
+- Questions are passed as `{"input": "..."}`.
+- Input is normalized and parsed by the dynamic agent runtime.
+- Tool outputs are persisted and can be consumed by downstream tasks.
 
-🧠 How It Works
-	1.	Startup: Loads JSON from S3 or local config/ folder.
-	2.	Initialization: Each task is mapped to a tool defined in tools.json.
-	3.	Execution:
-	•	Tasks are dynamically resolved based on input dependencies.
-	•	LLM calls are made via OpenAI Python SDK (not raw HTTP).
-	•	Output of each task is stored and passed to dependent tasks.
+## Run locally
 
-⸻
-
-🚀 Running Locally (Intel Mac)
-
-1. Create virtual environment:
-
+```bash
 python3 -m venv venv
 source venv/bin/activate
-
-2. Install requirements:
-
 pip install -r requirements.txt
-
-3. Set environment variables:
-
-export OPENAI_API_KEY=your_openai_key
-export CONFIG_BUCKET_NAME=your_s3_bucket_name  # Optional if using S3
-
-4. Run main pipeline:
-
+export OPENAI_API_KEY=your_openai_key  # optional; mock response is used if missing
 python main.py
+```
 
+## Config example
 
-⸻
+See `config/tool_config.json` for a complete example including:
+- dynamic framework selection,
+- dependency chaining (`input` field),
+- per-tool behavior definitions.
 
-🧠 Contributing
+## Notes
 
-We’re looking for:
-	•	⚡ Tool authors (build more reusable tools!)
-	•	🧪 Reviewers to test new agents
-	•	🧠 Feedback from real-world data/LLM pipeline use
-
-Feel free to open issues or submit PRs!
-
-⸻
-
-📄 License
-
-MIT License
+- If no OpenAI key is provided, TaskWeave uses a mock LLM response for local testing.
+- `api_call` tools should target reachable APIs.
