@@ -1,8 +1,9 @@
 {
   "agent": {
     "framework": "langgraph",
-    "agent_type": "ZERO_SHOT_REACT_DESCRIPTION",
-    "verbose": true
+    "model": "gpt-4o-mini",
+    "verbose": true,
+    "system_prompt": "You are a task orchestrator that decides which tools to use and how to chain results."
   },
   "tools": [
     {

@@ -1,22 +1,37 @@
 🧠 TaskWeave
 
-TaskWeave is a dynamic, JSON-driven agent framework built with LangChain and LangGraph. It creates an execution pipeline from configuration so questions can be parsed and processed by dynamically created agents.
+TaskWeave is a JSON-driven agent framework built with LangChain + LangGraph. A single config file controls which runtime is created and how tools are chained.
 
-## What this app does
+## Intent of the app
 
-1. Loads `config/tool_config.json`.
-2. Reads `agent.framework` to decide runtime:
-   - `langchain`: ReAct-style tool-using agent.
-   - `langgraph`: Deterministic chained workflow built from tool dependencies.
-3. Builds tools from JSON (`llm_prompt`, `api_call`, `analysis`).
-4. Executes tasks with dependency-aware chaining and shared memory.
+The app is designed to:
+- create agents dynamically from JSON,
+- parse user questions through that runtime,
+- execute modular tasks (`llm_prompt`, `api_call`, `analysis`),
+- and chain outputs across tasks.
 
-## JSON-driven agent behavior
+## Runtime modes
 
-- Agent type is controlled by JSON (`agent.framework` + `agent.agent_type`).
-- Questions are passed as `{"input": "..."}`.
-- Input is normalized and parsed by the dynamic agent runtime.
-- Tool outputs are persisted and can be consumed by downstream tasks.
+`config/tool_config.json` drives agent creation via `agent.framework`:
+
+- `langgraph` → deterministic dependency-ordered pipeline using `input` references.
+- `langchain` → model-driven tool selection using LangChain's `create_agent` (falls back to deterministic sequential mode if LangChain provider extras are unavailable).
+
+Both runtimes accept user payloads as:
+
+```python
+{"input": "your question"}
+```
+
+## Tool chaining model
+
+Each tool can declare dependencies via:
+
+```json
+"input": ["UpstreamToolName"]
+```
+
+At runtime, upstream outputs are loaded from shared memory and passed into downstream tools.
 
 ## Run locally
 
@@ -24,18 +39,11 @@ TaskWeave is a dynamic, JSON-driven agent framework built with LangChain and Lan
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-export OPENAI_API_KEY=your_openai_key  # optional; mock response is used if missing
+export OPENAI_API_KEY=your_openai_key  # optional; mock response is used when missing
 python main.py
 ```
 
-## Config example
-
-See `config/tool_config.json` for a complete example including:
-- dynamic framework selection,
-- dependency chaining (`input` field),
-- per-tool behavior definitions.
-
 ## Notes
 
-- If no OpenAI key is provided, TaskWeave uses a mock LLM response for local testing.
-- `api_call` tools should target reachable APIs.
+- If OpenAI credentials are missing, `call_llm` returns a mock response for local testing.
+- In restricted environments, API tool calls may fall back to a structured warning payload.
