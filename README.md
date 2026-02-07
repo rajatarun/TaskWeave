@@ -1,37 +1,87 @@
-🧠 TaskWeave
+🧠 TaskWeave API
 
-TaskWeave is a JSON-driven agent framework built with LangChain + LangGraph. A single config file controls which runtime is created and how tools are chained.
+TaskWeave is an API-first, JSON-driven agent framework built with LangChain + LangGraph.
 
 ## Intent of the app
 
-The app is designed to:
-- create agents dynamically from JSON,
-- parse user questions through that runtime,
+The API is designed to:
+- create a dynamic agent from request JSON,
+- parse the user question,
 - execute modular tasks (`llm_prompt`, `api_call`, `analysis`),
-- and chain outputs across tasks.
+- and chain tool outputs across tasks.
 
-## Runtime modes
+## API contract
 
-`config/tool_config.json` drives agent creation via `agent.framework`:
+### `POST /invoke` (HTTP JSON)
 
-- `langgraph` → deterministic dependency-ordered pipeline using `input` references.
-- `langchain` → model-driven tool selection using LangChain's `create_agent` (falls back to deterministic sequential mode if LangChain provider extras are unavailable).
-
-Both runtimes accept user payloads as:
-
-```python
-{"input": "your question"}
-```
-
-## Tool chaining model
-
-Each tool can declare dependencies via:
+Request body:
 
 ```json
-"input": ["UpstreamToolName"]
+{
+  "config": {
+    "agent": {
+      "framework": "langgraph",
+      "model": "gpt-4o-mini",
+      "system_prompt": "You are a task orchestrator."
+    },
+    "tools": [
+      {
+        "name": "ProblemTranslator",
+        "description": "Translates user query into a business problem",
+        "type": "llm_prompt",
+        "prompt_template": "Translate this question into a business problem: {input}"
+      },
+      {
+        "name": "DataFetcher",
+        "description": "Fetches data from API",
+        "type": "api_call",
+        "method": "POST",
+        "endpoint": "https://postman-echo.com/post",
+        "params_from_input": ["ProblemTranslator"],
+        "input": ["ProblemTranslator"]
+      },
+      {
+        "name": "Analyzer",
+        "description": "Analyzes fetched data",
+        "type": "analysis",
+        "prompt_template": "Analyze this: {input}",
+        "input": ["DataFetcher"]
+      }
+    ]
+  },
+  "input": "Compare Q1 and Q2 sales trends"
+}
 ```
 
-At runtime, upstream outputs are loaded from shared memory and passed into downstream tools.
+Response includes:
+- `result`: runtime output
+- `shared_memory`: all tool outputs for chained tasks
+
+### `POST /invoke/auto` (auto-generate config)
+
+Provide only a question and the API will use the tool schema registry to
+construct a config with an LLM before running the agent.
+
+Request body:
+
+```json
+{
+  "input": "Compare Q1 and Q2 sales trends"
+}
+```
+
+Response includes:
+- `result`
+- `shared_memory`
+- `config` (the generated config)
+
+### `GET /health`
+Returns service health.
+
+## Tool schema registry
+
+`config/tool_schema.json` is the single modular registry for tool definitions.
+Each tool includes `tags` to help the LLM select the correct tools when generating a config.
 
 ## Run locally
 
@@ -39,11 +89,11 @@ At runtime, upstream outputs are loaded from shared memory and passed into downs
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-export OPENAI_API_KEY=your_openai_key  # optional; mock response is used when missing
 python main.py
 ```
 
 ## Notes
 
-- If OpenAI credentials are missing, `call_llm` returns a mock response for local testing.
-- In restricted environments, API tool calls may fall back to a structured warning payload.
+- `agent.framework` supports `langgraph` and `langchain`.
+- If OpenAI credentials are missing, mock LLM responses are returned.
+- If API calls fail (e.g., restricted network), `api_call` tools return fallback payloads.

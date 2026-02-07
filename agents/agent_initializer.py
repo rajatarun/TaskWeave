@@ -18,14 +18,18 @@ def load_tool_config(path: str = "config/tool_config.json") -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
         raw = json.load(f)
 
+    return normalize_config(raw)
+
+
+def normalize_config(raw: Any) -> Dict[str, Any]:
     if isinstance(raw, list):
         return {
             "agent": {"framework": "langgraph", "model": "gpt-4o-mini", "verbose": True},
             "tools": raw,
         }
 
-    if "tools" not in raw:
-        raise ValueError("Invalid config: expected top-level 'tools' key")
+    if not isinstance(raw, dict) or "tools" not in raw:
+        raise ValueError("Invalid config: expected object containing top-level 'tools' key")
 
     return raw
 
@@ -159,9 +163,9 @@ def _build_langgraph_agent(config: Dict[str, Any]):
     return LangGraphDynamicAgent(workflow.compile())
 
 
-def create_agent(config_path: str = "config/tool_config.json"):
+def create_agent_from_config(config: Dict[str, Any]):
     shared_memory.clear()
-    config = load_tool_config(config_path)
+    config = normalize_config(config)
     framework = config.get("agent", {}).get("framework", "langgraph").lower()
 
     if framework == "langchain":
@@ -170,3 +174,7 @@ def create_agent(config_path: str = "config/tool_config.json"):
         return _build_langgraph_agent(config), shared_memory
 
     raise ValueError("Unsupported framework. Use 'langchain' or 'langgraph'.")
+
+
+def create_agent(config_path: str = "config/tool_config.json"):
+    return create_agent_from_config(load_tool_config(config_path))
