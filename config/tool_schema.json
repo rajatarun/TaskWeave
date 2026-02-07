@@ -1,0 +1,31 @@
+{
+  "description": "Registry of modular tools used to compose TaskWeave configs.",
+  "schema_version": "1.0",
+  "tools": [
+    {
+      "name": "ProblemTranslator",
+      "description": "Translates user queries into structured business problems",
+      "type": "llm_prompt",
+      "prompt_template": "Translate this question into a business problem: {input}",
+      "tags": ["translate", "summarize", "problem", "clarify", "business"]
+    },
+    {
+      "name": "DataFetcher",
+      "description": "Fetches data from an API based on the translated problem",
+      "type": "api_call",
+      "method": "POST",
+      "endpoint": "https://postman-echo.com/post",
+      "params_from_input": ["ProblemTranslator"],
+      "input": ["ProblemTranslator"],
+      "tags": ["fetch", "api", "data", "http", "request"]
+    },
+    {
+      "name": "Analyzer",
+      "description": "Analyzes the fetched data and identifies patterns",
+      "type": "analysis",
+      "prompt_template": "Based on all collected information, analyze patterns and provide insights: {input}",
+      "input": ["DataFetcher"],
+      "tags": ["analyze", "insights", "patterns", "summary"]
+    }
+  ]
+}

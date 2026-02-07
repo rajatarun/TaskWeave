@@ -4,6 +4,8 @@ from typing import Any, Dict
 
 from agents.agent_initializer import create_agent_from_config
 
+from agents.tool_config_generator import generate_config_from_question
+
 
 def _json_response(handler: BaseHTTPRequestHandler, status: int, payload: Dict[str, Any]):
     body = json.dumps(payload).encode("utf-8")
@@ -15,6 +17,24 @@ def _json_response(handler: BaseHTTPRequestHandler, status: int, payload: Dict[s
 
 
 class TaskWeaveHandler(BaseHTTPRequestHandler):
+    def _handle_invoke_auto(self):
+        length = int(self.headers.get("Content-Length", "0"))
+        raw_body = self.rfile.read(length)
+        try:
+            payload = json.loads(raw_body.decode("utf-8"))
+            question = payload.get("input") or payload.get("question")
+            if not question:
+                raise ValueError("Missing 'input' or 'question' in request body")
+
+            config = generate_config_from_question(question)
+            agent, memory = create_agent_from_config(config)
+            result = agent.invoke({"input": question})
+            _json_response(self, 200, {"result": result, "shared_memory": memory, "config": config})
+        except (KeyError, ValueError, json.JSONDecodeError) as exc:
+            _json_response(self, 400, {"error": str(exc)})
+        except Exception as exc:
+            _json_response(self, 500, {"error": str(exc)})
+
     def do_GET(self):
         if self.path == "/health":
             _json_response(self, 200, {"status": "ok"})
@@ -22,6 +42,9 @@ class TaskWeaveHandler(BaseHTTPRequestHandler):
         _json_response(self, 404, {"error": "Not found"})
 
     def do_POST(self):
+        if self.path == "/invoke/auto":
+            self._handle_invoke_auto()
+            return
         if self.path != "/invoke":
             _json_response(self, 404, {"error": "Not found"})
             return

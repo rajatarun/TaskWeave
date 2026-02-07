@@ -1,6 +1,6 @@
 🧠 TaskWeave API
 
-TaskWeave is now an API-first, JSON-driven agent framework built with LangChain + LangGraph.
+TaskWeave is an API-first, JSON-driven agent framework built with LangChain + LangGraph.
 
 ## Intent of the app
 
@@ -57,8 +57,31 @@ Response includes:
 - `result`: runtime output
 - `shared_memory`: all tool outputs for chained tasks
 
+### `POST /invoke/auto` (auto-generate config)
+
+Provide only a question and the API will use the tool schema registry to
+construct a config with an LLM before running the agent.
+
+Request body:
+
+```json
+{
+  "input": "Compare Q1 and Q2 sales trends"
+}
+```
+
+Response includes:
+- `result`
+- `shared_memory`
+- `config` (the generated config)
+
 ### `GET /health`
 Returns service health.
+
+## Tool schema registry
+
+`config/tool_schema.json` is the single modular registry for tool definitions.
+Each tool includes `tags` to help the LLM select the correct tools when generating a config.
 
 ## Run locally
 
