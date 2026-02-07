@@ -1,64 +1,76 @@
-🧠 TaskWeave
+🧠 TaskWeave API
 
-TaskWeave is a dynamic, JSON-driven agent framework built on LangChain and LangGraph. It allows you to spin up intelligent, configurable LLM-powered pipelines where each “tool” or “agent” performs a specific task, such as making API calls, analyzing data, or invoking LLM prompts.
+TaskWeave is now an API-first, JSON-driven agent framework built with LangChain + LangGraph.
 
-Designed for rapid prototyping and robust orchestration in data and software workflows.
+## Intent of the app
 
-⸻
+The API is designed to:
+- create a dynamic agent from request JSON,
+- parse the user question,
+- execute modular tasks (`llm_prompt`, `api_call`, `analysis`),
+- and chain tool outputs across tasks.
 
-⚙️ Features
-	•	🔄 JSON-defined task flows
-	•	🧩 Modular tasks (llm_prompt, api_call, analysis, etc.)
-	•	☁️ Config and tool definitions fetched from S3
-	•	🔗 Output chaining between tools
-	•	🧠 OpenAI LLMs via openai Python SDK
-	•	👥 Specialized agents for dev, QA, and analytics roles
+## API contract
 
+### `POST /invoke` (HTTP JSON)
 
-🧠 How It Works
-	1.	Startup: Loads JSON from S3 or local config/ folder.
-	2.	Initialization: Each task is mapped to a tool defined in tools.json.
-	3.	Execution:
-	•	Tasks are dynamically resolved based on input dependencies.
-	•	LLM calls are made via OpenAI Python SDK (not raw HTTP).
-	•	Output of each task is stored and passed to dependent tasks.
+Request body:
 
-⸻
+```json
+{
+  "config": {
+    "agent": {
+      "framework": "langgraph",
+      "model": "gpt-4o-mini",
+      "system_prompt": "You are a task orchestrator."
+    },
+    "tools": [
+      {
+        "name": "ProblemTranslator",
+        "description": "Translates user query into a business problem",
+        "type": "llm_prompt",
+        "prompt_template": "Translate this question into a business problem: {input}"
+      },
+      {
+        "name": "DataFetcher",
+        "description": "Fetches data from API",
+        "type": "api_call",
+        "method": "POST",
+        "endpoint": "https://postman-echo.com/post",
+        "params_from_input": ["ProblemTranslator"],
+        "input": ["ProblemTranslator"]
+      },
+      {
+        "name": "Analyzer",
+        "description": "Analyzes fetched data",
+        "type": "analysis",
+        "prompt_template": "Analyze this: {input}",
+        "input": ["DataFetcher"]
+      }
+    ]
+  },
+  "input": "Compare Q1 and Q2 sales trends"
+}
+```
 
-🚀 Running Locally (Intel Mac)
+Response includes:
+- `result`: runtime output
+- `shared_memory`: all tool outputs for chained tasks
 
-1. Create virtual environment:
+### `GET /health`
+Returns service health.
 
+## Run locally
+
+```bash
 python3 -m venv venv
 source venv/bin/activate
-
-2. Install requirements:
-
 pip install -r requirements.txt
-
-3. Set environment variables:
-
-export OPENAI_API_KEY=your_openai_key
-export CONFIG_BUCKET_NAME=your_s3_bucket_name  # Optional if using S3
-
-4. Run main pipeline:
-
 python main.py
+```
 
+## Notes
 
-⸻
-
-🧠 Contributing
-
-We’re looking for:
-	•	⚡ Tool authors (build more reusable tools!)
-	•	🧪 Reviewers to test new agents
-	•	🧠 Feedback from real-world data/LLM pipeline use
-
-Feel free to open issues or submit PRs!
-
-⸻
-
-📄 License
-
-MIT License
+- `agent.framework` supports `langgraph` and `langchain`.
+- If OpenAI credentials are missing, mock LLM responses are returned.
+- If API calls fail (e.g., restricted network), `api_call` tools return fallback payloads.
