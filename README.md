@@ -1,3 +1,5 @@
+> **Archived (September 2026).** TaskWeave was the first JSON-driven agent framework in this portfolio and is superseded by [TeamWeave](https://github.com/rajatarun/TeamWeave), which runs the same idea on AWS Step Functions and Bedrock with structured-output validation, RAG, and observability. No further development is planned here.
+
 🧠 TaskWeave API
 
 TaskWeave is an API-first, JSON-driven agent framework built with LangChain + LangGraph.
