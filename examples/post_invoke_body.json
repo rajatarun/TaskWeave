@@ -1,0 +1,24 @@
+{
+  "config": {
+    "agent": {
+      "framework": "langgraph",
+      "model": "gpt-4o-mini"
+    },
+    "tools": [
+      {
+        "name": "ProblemTranslator",
+        "description": "Translates user query into a business problem",
+        "type": "llm_prompt",
+        "prompt_template": "Translate this question into a business problem: {input}"
+      },
+      {
+        "name": "Analyzer",
+        "description": "Analyzes translated problem",
+        "type": "analysis",
+        "prompt_template": "Analyze this: {input}",
+        "input": ["ProblemTranslator"]
+      }
+    ]
+  },
+  "input": "Compare Q1 and Q2 sales trends"
+}
