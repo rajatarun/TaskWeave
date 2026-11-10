@@ -5,3 +5,4 @@ langchain_core
 langchain-openai
 langgraph
 pydantic
+requests
